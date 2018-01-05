@@ -1,0 +1,151 @@
+;
+; Built-in operations
+;
+;ref cref pass(ints) pass(default) are to be defined in compiler (same as [if loop add var] etc)
+ref = : _content_`ref _content_
+cref = : _content_`cref _content_
+pass = : _content_`cref _content_
+
+add=: a`cref(0) b`cref(0)
+	'((%a)+(%b))'
+	0
+sub=: `cref(0) `cref(0) 0
+div=: `cref(0) `cref(0) 0
+mul=: `cref(0) `cref(0) 0
+bitAnd=: `cref(0) `cref(0) 0
+bitOr=: `cref(0) `cref(0) 0
+negate=: `cref(0) 0
+cmp=: `cref(0) `cref(0) 0
+gt= : a`cref(0) b`cref(0) false
+eq= : a`cref(0) b`cref(0) false
+postIncrement=: v`ref(0) 0
+postDecrement=: v`ref(0) 0
+
+add=: `cref(0.0) `cref(0.0) 0.0
+sub=: `cref(0.0) `cref(0.0) 0.0
+div=: `cref(0.0) `cref(0.0) 0
+mul=: `cref(0.0) `cref(0.0) 0
+negate=: `cref(0.0) 0.0
+cmp=: `cref(0.0) `cref(0.0) 0
+gt=: `cref(0.0) `cref(0.0) false
+eq=: `cref(0.0) `cref(0.0) false
+postIncrement=: v`ref(0.0) 0.0
+postDecrement=: v`ref(0.0) 0.0
+
+not=: `cref(false) false
+and=: a`cref b`cref(:a) a
+or= : a`cref b`cref(:a) a
+
+setOp=: a`ref op`cref b`cref a.set(op(a.get b))
+concatenate=: a`cref _params_`cref ""
+if=: `cref(false) then`cref .
+if=: `cref(false) then`cref else`cref ;(: then.)
+	then.
+	else.
+while=: condition`cref(:false) do`cref(:.) .
+var=: _content_`cref #
+	get _content_
+	set: newV`cref(_content_) _content_
+
+fixedList=: first`cref _params_`cref
+	'fixedList'
+	#
+		size 0
+		iterator #
+			toBool false
+			current first
+			next .
+		at: i`cref(0) first
+;
+; Type aliases and std operations
+;
+int=0
+str=""
+bool=false
+void=.
+echo=: text`cref(str)
+	'puts(%text)'
+	.
+rand=:int
+copy=:
+	from`cref
+	to`ref
+	.
+
+array=:
+	size`cref(int)
+	itemType`cref
+	#
+		at: index`cref(int)
+			var(itemType)
+		. [cref(itemType)]
+rangeStep=:
+	from`cref
+	to`cref
+	step`cref
+	[cref(from)]
+for=:
+	list`cref
+	do`cref
+	
+	i = cref(list.iterator)
+	i.toBool
+	i.next
+	do i.current
+	.
+contains=:
+	list`cref
+	val`cref
+	bool
+keyValue=: key`cref value`cref ##
+at=: array`cref index`cref(0) array[index]
+switch=:
+	val`cref
+	cases ` cref([cref(keyValue(val`cref cref(:else.)))])
+	else`cref
+	else.
+;
+; GUI
+;
+Widget=#
+	this var Widget
+	paint : `cref(Canvas) .
+	onKey : key`cref(int) .
+	close .
+
+Timer=:
+	time  ` cref(int)
+	actor ` cref(:.)
+	#
+		pause .
+		start .
+
+key=#
+	up    1
+	down  2
+	left  3
+	right 4
+
+color=#
+	white 0xffffff
+	black 0
+
+Screen=#
+	add: `cref(Widget) .
+	w 640
+	h 480
+
+Canvas=#
+	fillRect:
+		x     ` cref(int)
+		y     ` cref(int)
+		w     ` cref(int)
+		color ` cref(int)
+		void
+
+Window=:
+	title  ` cref(str)
+	width  ` cref(int)
+	height ` cref(int)
+	this = var #this
+		. Widget

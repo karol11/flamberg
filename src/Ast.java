@@ -55,6 +55,11 @@ class Const extends Node {
 		this.value = value;
 	}
 
+	public Const(Object value, boolean isUnsigned) {
+		this.value = value;
+		//TODO: take in account isUnsigned
+	}
+
 	void match(NodeMatcher m) { m.onConst(this); }	
 }
 

@@ -1,0 +1,10 @@
++system
+
+;Point = : x
+;	:x
+
+;p = Point 1
+
+;x = p.
+
+echo 'Hello'
