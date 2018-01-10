@@ -1,10 +1,14 @@
 +system
 
+
+point = x y ##
+
+p = point 1 42
+
+echo "Hello {p.x}:{p.y}"
+
 ;Point = : x
 ;	:x
-
 ;p = Point 1
-
 ;x = p.
-
-echo 'Hello'
+;echo 'Hello'

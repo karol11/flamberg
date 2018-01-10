@@ -1,0 +1,81 @@
++system
+
+Tetris=:
+	W = 5
+	H = 15
+	SCALE = 10
+
+	super = Window
+		"Tetris"
+		(Screen.w - W * SCALE) / 2
+		(Screen.h - H * SCALE) / 2
+
+	pt=: x y ##
+		turned: d [:x :y :-x :-y][d].
+		
+	figures = []
+		[pt(0 0) pt(0 1) pt(1 0) pt(1 1)]
+		[pt(0 0) pt(0 1) pt(0 -1) pt(0 2)]
+
+	field = array H
+		array W 0
+		
+	x = var 0
+	y = var 0
+	d = var 0
+	figure = var 0
+	
+	next = : this (this+1)&3
+
+	in =: this range
+		this >= range.from && this < range.to
+		
+	newFigure=:
+		x := W / 2
+		y := 0
+		figure := rand 0 ~ figures.count
+		d := 0
+		if !fits(x y d) :super.close
+		fill 1
+
+	fits=: x y d
+		for figures[figure]: p
+			xx = x+p.turned(d)
+			yy = y+p.turned(d.next)
+			if !xx.in(0 W) || !yy.in(0 H) || field[yy][xx] != 0 :
+				^ false
+		true
+
+	fill=: v
+		for figures[figure] : p
+			field[y+p.turned(d.next)][x+p.turned(d)] := v
+		super.repaint
+
+	Timer 2000:
+		fill 0
+		if fits(x y+1 d):
+			y++
+			fill 1
+		else:
+			fill 1
+			for rangeStep(H-1 -1 0) : y
+				if !contains(field[y] 0):
+					copy field[y+1] field[y]
+			newFigure
+		
+	super.this := #
+		paint: g
+			for field.keyVals: row
+				for row.val.keyVals: c
+					g.fillRect c.key*SCALE row.key*SCALE SCALE-1 SCALE-1 if(c.val == 0 :color.white :color.black)
+		onKey: k
+			fill 0
+			switch k
+				key.up     ->:if fits(x y d.next): d:=d.next
+				key.left   ->:if fits(x-1 y d) x--
+				key.right  ->:if fits(x+1 y d) x++
+				key.down   ->:while :fits(x y+1 d) :y++
+			fill 1
+		. super
+
+Screen.add Tetris.
