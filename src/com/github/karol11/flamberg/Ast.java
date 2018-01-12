@@ -112,7 +112,7 @@ class DispType extends Type {
 	final Set<DispType> subType = new TreeSet<DispType>();
 
 	/**
-	 * Searches for ???
+	 * Searches for loops in super/sub graph.
 	 */
 	public boolean connectChild(DispType c, List<DispType> undoList) {
 		if (override != null)
