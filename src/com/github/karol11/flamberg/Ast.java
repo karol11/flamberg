@@ -31,7 +31,7 @@ class TypeMatcher {
 	void onDispType(DispType me) { onUnsupported(me); }
 	void onFnRefType(FnRefType me) { onUnsupported(me); }
 	void onVarType(VarType me) { onUnsupported(me); }
-	public void onBuiltinType(BuiltinType me) { onUnsupported(me); }
+	void onBuiltinType(BuiltinType me) { onUnsupported(me); }
 }
 
 abstract class Type {
@@ -226,6 +226,9 @@ class Node {
 	void error(String s) {
 		throw new CompilerError("Error: " + formatError(s));
 	}
+	public String toString() {
+		return new NodeDumper().process(this).getString();
+	}
 }
 
 class Const extends Node {
@@ -307,6 +310,7 @@ class FnDef extends Callable {
 	List<Ret> rets = new ArrayList<>(1);
 	FnDef parent;
 	FnDef overload;
+	List<FnDef> instances;
 
 	public FnDef() {
 	}
@@ -370,8 +374,9 @@ public class Ast {
 	}
 
 	FnDef main;
-	Map<String, FnDef> modules = new HashMap<String, FnDef>();
-	List<String> incompleteModules = new ArrayList<String>();
+	Map<String, FnDef> modules = new HashMap<>();
+	List<String> incompleteModules = new ArrayList<>();
+	List<FnDef> templateInstances = new ArrayList<>();
 	
 	static BuiltinType tInt = new BuiltinType("int");
 	static BuiltinType tUint = new BuiltinType("uint");

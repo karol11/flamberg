@@ -298,7 +298,7 @@ public class TypeResolver extends NodeMatcher {
 					for (int i = 0, n = callee.params.size(); i < n; i++) {
 						Param p = callee.params.get(i);
 						Type rpt = call.params.get(i).get();
-						if (!p.byRef) {
+						if (!p.byVref) {
 							while (rpt instanceof DispType) {
 								if (!((DispType)rpt).disp.containsKey(ast.get("get")))
 									break;
@@ -309,9 +309,9 @@ public class TypeResolver extends NodeMatcher {
 							}
 						}
 						p.type = rpt;
-						if (p.initializer != null) {
-							process(p.initializer);
-							unify(p.type, p.initializer.type, p);
+						if (p.typeExpr != null) {
+							process(p.typeExpr);
+							unify(p.type, p.typeExpr.type, p);
 						}
 					}
 					for (Node n: callee.body)
@@ -338,7 +338,7 @@ public class TypeResolver extends NodeMatcher {
 		Node actualParamNode = callNode.params.get(i);
 		Call getter = Parser.posFrom(actualParamNode, new Call(actualParamNode));
 		getter.params.add(
-			Parser.posFrom(actualParamNode, new Const(ast.get("get"), Ast.tAtom)));
+			Parser.posFrom(actualParamNode, new Const(ast.get("get"))));
 		callNode.params.set(i, getter);
 		onCall(getter);
 		return getter.type.get();
