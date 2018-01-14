@@ -1,11 +1,64 @@
 package com.github.karol11.flamberg;
 
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
+
+class TypeDumper extends TypeMatcher {
+	Set<Type> processed = new HashSet<>();
+	StringBuilder r = new StringBuilder();
+	
+	public TypeDumper process(Type type) {
+		if (type == null) {
+			r.append("NULL");
+			return this;
+		}
+		type = type.get();
+		r.append(type.id);
+		if (!processed.add(type))
+			return this;
+		r.append('=');
+		type.match(this);
+		return this;
+	}
+	void onFnType(FnType me) {
+		r.append('(');
+		for (Type p: me.params) {
+			process(p);
+			r.append("->");
+		}
+		process(me.result);
+		r.append(')');
+	}
+	void onDispType(DispType me) {
+		r.append('[');
+		for (Entry<Atom, Type> e: me.disp.entrySet()) {
+			r.append(e.getKey()).append(':');
+			process(e.getValue());
+		}
+		r.append(']');
+	}
+	void onFnRefType(FnRefType me) {
+		r.append('{');
+		for (FnRefType.FnAndRefs fr: me.fns)
+			r.append(fr.fnToInstantiate.name == null ? "?" : fr.fnToInstantiate.name).append('@').append(fr.refsToPatch.size());
+		r.append('}');		
+	}
+	void onVarType(VarType me) { r.append('?'); }
+	void onBuiltinType(BuiltinType me) { r.append(me.name); }
+	public String getString() {
+		String rs = r.toString();
+		r.setLength(0);
+		return rs;
+	}
+
+}
 
 public class NodeDumper extends NodeMatcher {
-	StringBuilder r;
+	StringBuilder r = new StringBuilder();
 	int indentPos = -1;
 	String firstLineTerm = "\n";
+	TypeDumper typeDumper = new TypeDumper();
 	
 	void indent(){
 		for (int i = 0; i < indentPos; i++)
@@ -20,6 +73,8 @@ public class NodeDumper extends NodeMatcher {
 		else {
 			if (n.name != null)
 				r.append(n.name).append(" = ");
+			typeDumper.process(n.type);
+			firstLineTerm = typeDumper.getString() + "\n";
 			n.match(this);			
 		}
 		indentPos--;

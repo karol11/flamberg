@@ -1,6 +1,7 @@
 package com.github.karol11.flamberg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,20 @@ import java.util.TreeSet;
 class CompilerError extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	CompilerError(String s) { super(s); }
+}
+
+class Numerator {
+	char[] r = {'a'};
+	String next() {
+		for (int i = r.length; --i >= 0;) {
+			if (++r[i] <= 'z')
+				return new String(r);
+			r[i] = 'a';
+		}
+		r = new char[r.length + 1];
+		Arrays.fill(r, 'a');
+		return new String(r);
+	}
 }
 
 class Atom implements Comparable<Atom> {
@@ -35,7 +50,7 @@ class TypeMatcher {
 }
 
 abstract class Type {
-	static int numerator = 0;
+	static Numerator numerator = new Numerator();
 	
 	/**
 	 * First it is null. After some unifications it can reference other type.
@@ -46,9 +61,9 @@ abstract class Type {
 	Type override;
 	
 	/**
-	 * Used to make unique ids.
+	 * Unique id for to string conversion.
 	 */
-	int id = numerator++;
+	String id = numerator.next();
 	
 	void match(TypeMatcher m) { m.onUnsupported(this); }
 
@@ -71,6 +86,10 @@ abstract class Type {
 		if (t != this)
 			override = t;
 		return t;
+	}
+	
+	public String toString() {
+		return new TypeDumper().process(this).getString();
 	}
 }
 
