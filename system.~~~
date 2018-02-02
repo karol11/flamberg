@@ -1,53 +1,53 @@
 ;
 ; Built-in operations
 ;
-;ref cref pass(ints) pass(default) are to be defined in compiler (same as [if loop add var] etc)
+;vref ref pass(ints) pass(default) are to be defined in compiler (same as [if loop add var] etc)
+vref = : _content_`vref _content_
 ref = : _content_`ref _content_
-cref = : _content_`cref _content_
-pass = : _content_`cref _content_
+pass = : _content_`ref _content_
 
-add=: a`cref(0) b`cref(0)
+add=: a`ref(0) b`ref(0)
 	'((%a)+(%b))'
 	0
-sub=: `cref(0) `cref(0) 0
-div=: `cref(0) `cref(0) 0
-mul=: `cref(0) `cref(0) 0
-bitAnd=: `cref(0) `cref(0) 0
-bitOr=: `cref(0) `cref(0) 0
-negate=: `cref(0) 0
-cmp=: `cref(0) `cref(0) 0
-gt= : a`cref(0) b`cref(0) false
-eq= : a`cref(0) b`cref(0) false
-postIncrement=: v`ref(0) 0
-postDecrement=: v`ref(0) 0
+sub=: `ref(0) `ref(0) 0
+div=: `ref(0) `ref(0) 0
+mul=: `ref(0) `ref(0) 0
+bitAnd=: `ref(0) `ref(0) 0
+bitOr=: `ref(0) `ref(0) 0
+negate=: `ref(0) 0
+cmp=: `ref(0) `ref(0) 0
+gt= : a`ref(0) b`ref(0) false
+eq= : a`ref(0) b`ref(0) false
+postIncrement=: v`vref(0) 0
+postDecrement=: v`vref(0) 0
 
-add=: `cref(0.0) `cref(0.0) 0.0
-sub=: `cref(0.0) `cref(0.0) 0.0
-div=: `cref(0.0) `cref(0.0) 0
-mul=: `cref(0.0) `cref(0.0) 0
-negate=: `cref(0.0) 0.0
-cmp=: `cref(0.0) `cref(0.0) 0
-gt=: `cref(0.0) `cref(0.0) false
-eq=: `cref(0.0) `cref(0.0) false
-postIncrement=: v`ref(0.0) 0.0
-postDecrement=: v`ref(0.0) 0.0
+add=: `ref(0.0) `ref(0.0) 0.0
+sub=: `ref(0.0) `ref(0.0) 0.0
+div=: `ref(0.0) `ref(0.0) 0
+mul=: `ref(0.0) `ref(0.0) 0
+negate=: `ref(0.0) 0.0
+cmp=: `ref(0.0) `ref(0.0) 0
+gt=: `ref(0.0) `ref(0.0) false
+eq=: `ref(0.0) `ref(0.0) false
+postIncrement=: v`vref(0.0) 0.0
+postDecrement=: v`vref(0.0) 0.0
 
-not=: `cref(false) false
-and=: a`cref b`cref(:a) a
-or= : a`cref b`cref(:a) a
+not=: `ref(false) false
+and=: a`ref b`ref(:a) a
+or= : a`ref b`ref(:a) a
 
-setOp=: a`ref op`cref b`cref a.set(op(a.get b))
-concatenate=: a`cref _params_`cref ""
-if=: `cref(false) then`cref .
-if=: `cref(false) then`cref else`cref ;(: then.)
+setOp=: a`vref op`ref b`ref a.set(op(a.get b))
+concatenate=: a`ref _params_`ref ""
+if=: `ref(false) then`ref .
+if=: `ref(false) then`ref else`ref ;(: then.)
 	then.
 	else.
-while=: condition`cref(:false) do`cref(:.) .
-var=: _content_`cref #
+while=: condition`ref(:false) do`ref(:.) .
+var=: _content_`ref #
 	get _content_
-	set: newV`cref(_content_) _content_
+	set: newV`ref(_content_) _content_
 
-fixedList=: first`cref _params_`cref
+fixedList=: first`ref _params_`ref
 	'fixedList'
 	#
 		size 0
@@ -55,7 +55,7 @@ fixedList=: first`cref _params_`cref
 			toBool false
 			current first
 			next .
-		at: i`cref(0) first
+		at: i`ref(0) first
 ;
 ; Type aliases and std operations
 ;
@@ -63,59 +63,59 @@ int=0
 str=""
 bool=false
 void=.
-echo=: text`cref(str)
+echo=: text`ref(str)
 	'puts(%text)'
 	.
 rand=:int
 copy=:
-	from`cref
-	to`ref
+	from`ref
+	to`vref
 	.
 
 array=:
-	size`cref(int)
-	itemType`cref
+	size`ref(int)
+	itemType`ref
 	#
-		at: index`cref(int)
+		at: index`ref(int)
 			var(itemType)
-		. [cref(itemType)]
+		. [ref(itemType)]
 rangeStep=:
-	from`cref
-	to`cref
-	step`cref
-	[cref(from)]
+	from`ref
+	to`ref
+	step`ref
+	[ref(from)]
 for=:
-	list`cref
-	do`cref
+	list`ref
+	do`ref
 	
-	i = cref(list.iterator)
+	i = ref(list.iterator)
 	i.toBool
 	i.next
 	do i.current
 	.
 contains=:
-	list`cref
-	val`cref
+	list`ref
+	val`ref
 	bool
-keyValue=: key`cref value`cref ##
-at=: array`cref index`cref(0) array[index]
+keyValue=: key`ref value`ref ##
+at=: array`ref index`ref(0) array[index]
 switch=:
-	val`cref
-	cases ` cref([cref(keyValue(val`cref cref(:else.)))])
-	else`cref
+	val`ref
+	cases ` ref([ref(keyValue(val`ref ref(:else.)))])
+	else`ref
 	else.
 ;
 ; GUI
 ;
 Widget=#
 	this var Widget
-	paint : `cref(Canvas) .
-	onKey : key`cref(int) .
+	paint : `ref(Canvas) .
+	onKey : key`ref(int) .
 	close .
 
 Timer=:
-	time  ` cref(int)
-	actor ` cref(:.)
+	time  ` ref(int)
+	actor ` ref(:.)
 	#
 		pause .
 		start .
@@ -131,21 +131,21 @@ color=#
 	black 0
 
 Screen=#
-	add: `cref(Widget) .
+	add: `ref(Widget) .
 	w 640
 	h 480
 
 Canvas=#
 	fillRect:
-		x     ` cref(int)
-		y     ` cref(int)
-		w     ` cref(int)
-		color ` cref(int)
+		x     ` ref(int)
+		y     ` ref(int)
+		w     ` ref(int)
+		color ` ref(int)
 		void
 
 Window=:
-	title  ` cref(str)
-	width  ` cref(int)
-	height ` cref(int)
+	title  ` ref(str)
+	width  ` ref(int)
+	height ` ref(int)
 	this = var #this
 		. Widget

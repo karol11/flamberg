@@ -1,14 +1,47 @@
 +system
 
+a = 42
 
-point = x y ##
+invertSign = : x
+	-x
 
-p = point 1 42
+echo invertSign(a)
 
-echo "Hello {p.x}:{p.y}"
+'
+	; comment
 
-;Point = : x
-;	:x
-;p = Point 1
-;x = p.
-;echo 'Hello'
+	a = 42 ;constant
+	b = 12
+
+	; function definition
+	invertSign  = : x
+		-x
+
+	; call
+	echo invertSign(a)
+
+	echo
+		invertSign
+		invertSign
+			a + 44
+
+	; passig anonimous function to function 'if'
+
+	if a < b:
+			echo "less"
+
+	; defining data structure		
+
+	point = : x y ##
+
+	; creating structure instance
+
+	p = point 1 42
+
+	; accessing fields (and string interpolation)
+
+	echo "
+		Point fields are
+			x={p.x}
+			y={p.y}
+		Hello

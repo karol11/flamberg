@@ -290,6 +290,7 @@ public class TypeResolver extends NodeMatcher {
 				if (overload == null)					
 					throw new TypematchError(new TypematchReason("none of overloads matched:", me, reasons));
 				//TODO: check recursive  instances
+				
 				FnDef callee = (FnDef) (fn.refsToPatch.size() == 0 ? overload : CopyMaker.copy(overload, call.params.size()));
 				callee.type = call;
 				try {

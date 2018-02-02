@@ -74,7 +74,7 @@ public class NodeDumper extends NodeMatcher {
 			if (n.name != null)
 				r.append(n.name).append(" = ");
 			typeDumper.process(n.type);
-			firstLineTerm = typeDumper.getString() + "\n";
+			firstLineTerm = " ;type=" + typeDumper.getString() + "\n";
 			n.match(this);			
 		}
 		indentPos--;
@@ -115,8 +115,10 @@ public class NodeDumper extends NodeMatcher {
 		for (Param p: me.params)
 			process(p);
 		r.append("\n");
-		for (Node n: me.body)
-			process(n);
+		for (Node n: me.body) {
+			if (!(n instanceof FnDef))
+				process(n);			
+		}
 	}
 	public void onDisp(Disp me) {
 		r.append("#").append(me.exportAll != null ? "#" : "").append(firstLineTerm);

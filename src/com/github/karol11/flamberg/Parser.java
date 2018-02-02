@@ -466,6 +466,7 @@ public class Parser {
 						}
 						if (pos == line.length())
 							break;
+						pos++;
 						elements.add(parseCornerCall(null));
 						expectSameLine('}');
 					}

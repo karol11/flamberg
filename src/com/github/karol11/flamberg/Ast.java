@@ -273,6 +273,8 @@ class Const extends Node {
 			type = Ast.tBool;
 		else if (value instanceof Atom)
 			type = Ast.tAtom;
+		else if (value instanceof String)
+			type = Ast.tString;
 		else
 			error("unexpected builtin type");
 	}

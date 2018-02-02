@@ -8,5 +8,7 @@ public class Main {
 		String src = "test.~~~";
 		new Parser().parse(src, ast, ast.main);
 		new NameResolver().process(ast);
+		new TypeResolver().process(ast);
+		System.out.print(ast.main.toString());
 	}
 }
