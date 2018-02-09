@@ -1,21 +1,23 @@
 # Flamberg
 A high/low level lightweight programming language.
 
-### Features
-- Compiled to machine code. If needed - low level, otherwise - managed.
+## Features
+- Compiled to machine code. If needed - low level, otherwise - managed
+- No GC! Litetime management built atop of vaster-shared-weak references.
 - Modular.
 - Object-oriented, imperative, functional.
 - Strong typing with global type inference.
 - Lightweight indentation-based syntax.
 - Simple. Eight syntax elements: constant, function, dispatcher, call, termination, import, name, type.
 
-### Samples
-Hello world
+## Samples
+
+### Hello world
 ```Python
 "Hello world {2*2}!"
 ```
 
-Functions
+### Functions
 ```Python
 square =: x
   x * x
@@ -24,7 +26,7 @@ echo square(4)
 echo square(3.14)
 ```
 
-Data structures
+### Data structures
 ```Python
 Person = : name age ##
 for []
@@ -37,13 +39,14 @@ do: i
       {i.name} of {i.age} years{if i.age % 10 == 1 :"" :"s"}
 ```
 
-Low level (invert the most significant bit in a byte at address 0x12345).
+### Low level
+Invert the most significant bit in a byte at address 0x12345.
 ```Python
 +unsafe
 ptr(0x12345).byte ^= 0x80
 ```
 
-Fizz-Buzz
+### Fizz-Buzz
 ```Python
 for 0~101: i
    echo
@@ -53,7 +56,7 @@ for 0~101: i
          if i%5 :"fizz"     :"fizzbuzz"
 ```
 
-In PHP boots
+### In PHP boots
 ```Python
 mySql.connect dbName user password
 ..query "
@@ -67,7 +70,7 @@ mySql.connect dbName user password
 ..echo
 ```
 
-Classes and objects
+### Classes and objects
 ```Python
 +canvas
 
