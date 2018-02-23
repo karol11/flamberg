@@ -1,8 +1,10 @@
 package com.github.karol11.flamberg;
 
+import java.io.IOException;
+
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		Ast ast = new Ast();
 		ast.main = new FnDef();
 		String src = "test.~~~";

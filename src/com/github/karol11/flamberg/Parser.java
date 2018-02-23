@@ -536,6 +536,8 @@ public class Parser {
 			int shift = 0;
 			for (;; shift +=4) {
 				char c = peek(0);
+				if (c == '_')
+					continue;
 				int d =
 					inRange(c, '0', '9') ? c - '0' :
 					inRange(c, 'A', 'F') ? c - 'A' + 10 :
@@ -547,9 +549,37 @@ public class Parser {
 					error("hexadecimal const exceedes 64 bits");
 				r |= d << shift;
 			}
+		} else if (isn("0b")) {
+			int shift = 0;
+			for (;; shift++) {
+				char c = peek(0);
+				if (c == '_')
+					continue;
+				if (!inRange(c, '0', '1'))
+					break;
+				r |= (c - '0') << shift;
+				pos++;
+				if (shift >= 64)
+					error("binary const exceedes 64 bits");
+			}
+		} else if (isn("0o")) {
+			int shift = 0;
+			for (;; shift +=3) {
+				char c = peek(0);
+				if (c == '_')
+					continue;
+				if (!inRange(c, '0', '7'))
+					break;
+				pos++;
+				if (shift >= 64)
+					error("hexadecimal const exceedes 64 bits");
+				r |= (c - '0') << shift;
+			}
 		} else {
 			for (;;) {
 				char c = peek(0);
+				if (c == '_')
+					continue;
 				if (!inRange(c, '0', '9'))
 					break;
 				pos++;
