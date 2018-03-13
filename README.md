@@ -35,8 +35,7 @@ for []
   Person "Polina" 14
   Person "Tony" 7
 do: i
-  echo "
-      {i.name} of {i.age} years{if i.age % 10 == 1 :"" :"s"}
+  echo "{i.name} of {i.age} year{if i.age % 10 == 1 :"" :"s"}"
 ```
 
 ### Low level
