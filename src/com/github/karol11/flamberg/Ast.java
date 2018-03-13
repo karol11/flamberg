@@ -210,6 +210,7 @@ class BuiltinType extends Type {
 	
 	BuiltinType(String name) {
 		this.name = name;
+		Ast.builtinTypeConstructors.put(this, new TypeConstructor(new FnDef(name)));
 	}
 	void match(TypeMatcher m) { m.onBuiltinType(this); }
 }
@@ -290,6 +291,7 @@ class Const extends Node {
 			type = Ast.tString;
 		else
 			error("unexpected builtin type");
+		this.typeConstructor = Ast.builtinTypeConstructors.get(type);
 	}
 
 	void match(NodeMatcher m) { m.onConst(this); }	
@@ -302,6 +304,10 @@ class Call extends Node {
 	// example: disp.atom(params) -> call(call(disp .atom) params)
 	// used in rebind to call(atom_name_fn disp params) that happens at the type resolution stage
 	Call superCall;
+	
+	{
+		typeConstructor = new TypeConstructor();
+	}
 	
 	public Call(List<Node> params) {
 		this.params = params;
@@ -323,6 +329,7 @@ class Param extends Node {
 	public Param(String name, Node typeExpr) {
 		this.name = name;
 		this.typeExpr = typeExpr;
+		typeConstructor = new TypeConstructor();
 	}
 	void match(NodeMatcher m) { m.onParam(this); }
 }
@@ -352,16 +359,18 @@ class FnDef extends Callable {
 	List<FnDef> instances;
 
 	public FnDef() {
+		typeConstructor = new TypeConstructor(this);
 	}
 	public FnDef(FnDef parent) {
 		this.parent = parent;
+		typeConstructor = new TypeConstructor(this);
 	}
 	public FnDef(FnDef parent, Node body) {
 		this(parent);
 		this.body.add(body);
 	}
 	
-	FnDef(String name) {
+	FnDef(String name) { // for builtin type constructors only
 		this.name = name;
 	}
 
@@ -372,6 +381,10 @@ class Disp extends Callable {
 	Map<Atom, FnDef> variants = new TreeMap<Atom, FnDef>();
 	List<Node> defs = new ArrayList<Node>();
 	FnDef exportAll;
+	
+	{
+		typeConstructor = new TypeConstructor(this);
+	}
 	
 	void match(NodeMatcher m) { m.onDisp(this); }
 }
@@ -416,6 +429,7 @@ public class Ast {
 	Map<String, FnDef> modules = new HashMap<>();
 	List<String> incompleteModules = new ArrayList<>();
 	List<FnDef> templateInstances = new ArrayList<>();
+	static final Map<Type, TypeConstructor> builtinTypeConstructors = new HashMap<>();
 	
 	static BuiltinType tInt = new BuiltinType("int");
 	static BuiltinType tUint = new BuiltinType("uint");
