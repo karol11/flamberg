@@ -3,6 +3,7 @@ package com.github.karol11.flamberg;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -213,20 +214,6 @@ class BuiltinType extends Type {
 	void match(TypeMatcher m) { m.onBuiltinType(this); }
 }
 
-class NodeMatcher {
-	void onUnsupported(Node me) {
-		throw new CompilerError("node " + me + " isn't matched by" + this.getClass().getName());
-	}
-	public void onConst(Const me) { onUnsupported(me); }
-	public void onCall(Call me) { onUnsupported(me);}
-	public void onParam(Param me) { onUnsupported(me); }
-	public void onRef(Ref me) { onUnsupported(me); }
-	public void onFnDef(FnDef me) { onUnsupported(me); }
-	public void onDisp(Disp me) { onUnsupported(me); }
-	public void onRet(Ret me) { onUnsupported(me); }
-	public void onCast(Cast me) { onUnsupported(me); }
-}
-
 class Node {
 	final static int LN_LOCAL = 0;
 	final static int LN_LOCAL_FIELD = 1;
@@ -239,6 +226,7 @@ class Node {
 	FnDef scope;
 	Type type;
 	int linkage = LN_LOCAL;
+	TypeConstructor typeConstructor;
 	
 	void match(NodeMatcher m) { m.onUnsupported(this); }
 	String formatError(String e) { return e + " at " + file + "(" + line + ":" + linePos + ")"; }
@@ -248,6 +236,31 @@ class Node {
 	public String toString() {
 		return new NodeDumper().process(this).getString();
 	}
+}
+
+class TypeConstructor {
+	public TypeConstructor() {}
+	public TypeConstructor(Callable n) {
+		fns.add(n);
+	}
+	Set<Callable> fns = new HashSet<Callable>(2); // FnDef or Disp, thats entry point activates when access to this values
+	List<Node> depends; //Param or Call
+	List<Integer> dependIndex;
+	public String id;
+}
+
+class NodeMatcher {
+	void onUnsupported(Node me) {
+		throw new CompilerError("node " + me + " isn't matched by" + this.getClass().getName());
+	}
+	public void onConst(Const me) { onUnsupported(me); }
+	public void onCall(Call me) { onUnsupported(me);}
+	public void onParam(Param me) { onUnsupported(me); }
+	public void onRef(Ref me) { onUnsupported(me); }
+	public void onFnDef(FnDef me) { onUnsupported(me); }
+	public void onDisp(Disp me) { onUnsupported(me); }
+	public void onRet(Ret me) { onUnsupported(me); }
+	public void onCast(Cast me) { onUnsupported(me); }
 }
 
 class Const extends Node {
@@ -284,6 +297,11 @@ class Const extends Node {
 
 class Call extends Node {
 	List<Node> params; // params[0] -> function to call
+
+	//  points to parent call node if this call is nested in another call
+	// example: disp.atom(params) -> call(call(disp .atom) params)
+	// used in rebind to call(atom_name_fn disp params) that happens at the type resolution stage
+	Call superCall;
 	
 	public Call(List<Node> params) {
 		this.params = params;

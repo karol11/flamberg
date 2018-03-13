@@ -8,6 +8,10 @@ import java.util.Map.Entry;
 abstract class Action {
 	abstract void undo();
 }
+// TODO: dfs with unification by all not overloaded calls and all fn internals.
+// storing the list of postponed overloaded calls.
+// bfs? on overloaded calls
+
 class TypematchReason {
 	String text;
 	List<TypematchReason> causes;
@@ -52,27 +56,29 @@ class TypematchError extends RuntimeException {
 public class TypeResolver extends NodeMatcher {
 	Ast ast;
 	List<Action> undo = new ArrayList<Action>();
+	Call superCall; // inside call.params[0].process a superCall field references the call node
 	
 	public void onParam(Param me) {}//do nothing
 	public void onConst(Const me) {}//do nothing
 	public void onCall(Call me) {
+		me.superCall = superCall;
 		final FnType ft = new FnType();
 		ft.result = me.type = new VarType();
 		ft.caller = me;
 		Iterator<Node> i = me.params.iterator();
 		Node fn = i.next();
-		process(fn);
+		process(fn, me);
 		while (i.hasNext()) {
 			Node p = i.next();
 			process(p);
 			ft.params.add(p.type);
 		}
-		unify(fn.type, ft, me);
+		unify(fn.type, ft, me);			
 	}
 	public void onRef(Ref me) {
 		me.type =
 			me.target instanceof FnDef ? new FnRefType(me) :
-			me.target.type == null ? new VarType() : /* TODO: link that var to a target.type */
+			me.target.type == null ? new VarType() :
 			me.target.type;
 	}
 	public void onFnDef(FnDef me) {
@@ -258,13 +264,66 @@ public class TypeResolver extends NodeMatcher {
 				if (!(t instanceof DispType))
 					reportError(me, "getter should return disp");
 				dt = (DispType) t;
-			} else {					
-				// TODO: rebind a.method(params) -> method(a params)
-				// (a .method) -> (ref"method" a)
-				// ((a .method) params) -> (ref"method" a params)
-				me.error("no atom " + a.name + " in this type");
+			} else {
+				List<TypematchReason> reasons = null;
+				if (me instanceof Call) {
+					Call thisCall = call.caller;
+					reasons = new ArrayList<TypematchReason>();
+					int undoPos = undo.size();
+					FnDef fn = null;
+					for (FnDef scope = thisCall.scope; scope != null; scope = scope.parent) {
+						Node n = scope.named.get(a.name);
+						if (n instanceof FnDef) {
+							fn = (FnDef) n;
+							break;
+						}
+					}
+					for (; fn != null; fn = fn.overload) {
+						if (fn.params.size() < 1 || !"_this".equals(fn.params.get(0).name))
+							continue;
+						if (thisCall.superCall != null && fn.params.size() > 1) {
+							Ref ref = new Ref(a.name);
+							ref.target = fn;
+							thisCall.superCall.params.set(0, ref);
+							thisCall.superCall.params.add(1, thisCall.params.get(0));
+							Type prevSupercallType = thisCall.superCall.type;
+							thisCall.superCall.type = null;
+							try{
+								process(thisCall.superCall);								
+								return;
+							} catch (TypematchError e) {
+								onTypeMatchError(undoPos, reasons, fn, e);
+								thisCall.superCall.params.set(0, thisCall);
+								thisCall.superCall.params.remove(1);
+								thisCall.superCall.type = prevSupercallType;
+							}
+						} else if (fn.params.size() == 1) {
+							Node prevAtom = thisCall.params.get(1);
+							thisCall.params.remove(1);
+							Ref ref = new Ref(a.name);
+							ref.target = fn;
+							thisCall.params.add(0, ref);
+							Type prevType = thisCall.type;
+							thisCall.type = null;
+							try {
+								process(thisCall);
+								return;
+							} catch (TypematchError e) {
+								onTypeMatchError(undoPos, reasons, fn, e);
+								thisCall.params.remove(0);
+								thisCall.params.add(1, prevAtom);
+								thisCall.type = prevType;
+							}
+						}
+					}
+				}
+				if (reasons == null)
+					reportError(me, "no atom " + a.name + " in this type");
+				else
+					throw new TypematchError(new TypematchReason("no atom " + a.name + " in this type", me, reasons));
 			}
 		}
+
 		useAtom(dt, a, me);
 		FnType emptyCall = new FnType();
 		emptyCall.result = call.result;
@@ -327,13 +386,16 @@ public class TypeResolver extends NodeMatcher {
 					}
 					break byOverloads;
 				} catch (TypematchError e) {
-					reasons.add(new TypematchReason(e.reason, "cannot use" + (overload.name != null ? " unnamed fn" : (" " + overload.name)), overload));
-					for (int s = undo.size(); s-- > undoPos;)
-						undo.remove(s).undo();
+					onTypeMatchError(undoPos, reasons, overload, e);
 				}
 			}
 		}
 		call.caller = null;
+	}
+	private void onTypeMatchError(int undoPos, List<TypematchReason> reasons, FnDef overload, TypematchError e) {
+		reasons.add(new TypematchReason(e.reason, "cannot use" + (overload.name != null ? " unnamed fn" : (" " + overload.name)), overload));
+		for (int s = undo.size(); s-- > undoPos;)
+			undo.remove(s).undo();
 	}
 	private Type attachGetter(Call callNode, int i) {
 		Node actualParamNode = callNode.params.get(i);
@@ -345,16 +407,22 @@ public class TypeResolver extends NodeMatcher {
 		return getter.type.get();
 	}
 	static int callDepth = 0;
-	private void process(Node n) {
+	private void process(Node n, Call superCall) {
 		if (n == null || n.type != null)
 			return;
 		if (callDepth++ > 100)
 			n.error("overflow");
+		Call prevSuperCall = this.superCall;
 		try {
+			this.superCall = superCall;
 			n.match(this);			
 		} finally {
+			this.superCall = prevSuperCall;
 			callDepth--;			
 		}
+	}
+	private void process(Node n) {
+		process(n, null);
 	}
 	void process(Ast ast) {
 		try{			

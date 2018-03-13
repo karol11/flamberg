@@ -33,7 +33,7 @@ public class NameResolver extends NodeMatcher {
 			me.target.linkage = Node.LN_LOCAL_FIELD;
 	}
 	Node resolve(String name, FnDef scope) {
-		for (FnDef s = currentFn; s != null; s = s.parent) {
+		for (FnDef s = scope; s != null; s = s.parent) {
 			Node r = s.named.get(name);
 			if (r != null) {
 				return r;

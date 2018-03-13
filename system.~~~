@@ -66,6 +66,9 @@ void=.
 echo=: text`ref(str)
 	'puts(%text)'
 	.
+echo=: anything`ref
+	; echo anything.toString
+	.
 rand=:int
 copy=:
 	from`ref
