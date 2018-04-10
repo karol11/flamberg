@@ -47,7 +47,7 @@ ptr(0x12345).byte ^= 0x80
 
 ### Fizz-Buzz
 ```Python
-for 0~101: i
+for 1~101: i
    echo
       if i%3:
          if i%5 :i.toString :"buzz"
