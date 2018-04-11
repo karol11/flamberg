@@ -305,6 +305,9 @@ class Call extends Node {
 	// used in rebind to call(atom_name_fn disp params) that happens at the type resolution stage
 	Call superCall;
 	
+	boolean recursive;
+	boolean inlined;
+	
 	{
 		typeConstructor = new TypeConstructor();
 	}
@@ -346,6 +349,9 @@ class Ref extends Node {
 }
 
 class Callable extends Node {
+	int weight = -1;
+	int callsCount = 0;
+	boolean inlined;
 }
 
 class FnDef extends Callable {

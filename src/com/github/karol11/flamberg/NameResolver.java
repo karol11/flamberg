@@ -25,7 +25,10 @@ public class NameResolver extends NodeMatcher {
 	public void onRef(Ref me) {
 		if (me.target != null)
 			return;
-	//TODO _() is hard immediate recursive, same_named() call to overloaded, _reapply() make overload resolution at the point of original call
+	//TODO 
+	//  _() is hard immediate recursive,
+	//  same_named() call to overloaded,
+	//  _reapply() make overload resolution at the point of original call
 		me.target = resolve(me.targetName, currentFn);
 		if (me.target == null)
 			me.error("unresolved name " + me.targetName);
