@@ -8,11 +8,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class CopyMaker extends NodeMatcher {
-	Map<Node, Node> xrefs = new HashMap<Node, Node>();
+	Map<Object, Object> xrefs = new HashMap<>();
 	Node r;
 	List<Param> varParams;
 	int actualParamsCount;
-	Param srcVarParam;
+	Name srcVarParam;
+	FnDef currentScope;
 
 	static Node copy(Node src, int actualParamsCount) {
 		CopyMaker c = new CopyMaker(actualParamsCount);
@@ -31,9 +32,10 @@ public class CopyMaker extends NodeMatcher {
 		if (src != r) {
 			xrefs.put(src, r);
 			Parser.posFrom(src, r);
-			if (r.name == null)
-				r.name = src.name;
-			r.scope = src.scope;
+			if (r.name == null && src.name != null) {
+				xrefs.put(src.name, new Name(src.name.val, currentScope, src));
+			}
+			r.scope = currentScope;
 		}
 		return r;
 	}
@@ -42,11 +44,8 @@ public class CopyMaker extends NodeMatcher {
 		Call c = new Call((Node)null);
 		for (Node p: me.params) {
 			if (srcVarParam != null && p instanceof Ref && ((Ref)p).target == srcVarParam) {
-				for (Param vp: varParams) {
-					Ref ref = Parser.posFrom(vp, new Ref(vp.name));
-					ref.target = vp;
-					c.params.add(ref);
-				}
+				for (Param vp: varParams)
+					c.params.add(Parser.posFrom(p, new Ref(vp.name)));
 			} else
 				c.params.add(copy(p));
 		}
@@ -64,12 +63,14 @@ public class CopyMaker extends NodeMatcher {
 	}
 	public void onFnDef(FnDef me) {
 		FnDef f = new FnDef(me.parent);
+		FnDef prevCurrentScope = currentScope;
+		currentScope = f;
 		for (Param p: me.params) {
 			if (varParams == null && p.name.equals("_params_")) {
 				varParams = new ArrayList<Param>();
-				srcVarParam = p;
+				srcVarParam = p.name;
 				for (int i = 0; i < actualParamsCount - (me.params.size() - 1); i++) {
-					Param ap = Parser.posFrom(p, new Param("_param_" + i + "_", copy(p.typeExpr)));
+					Param ap = Parser.posFrom(p, new Param(new Name("_param_" + i + "_", f, null), copy(p.typeExpr)));
 					varParams.add(ap);
 					f.params.add(ap);
 				}
@@ -80,6 +81,7 @@ public class CopyMaker extends NodeMatcher {
 			f.body.add(copy(n));
 		f.rets = new ArrayList<Ret>(me.rets);
 		r = f;
+		currentScope = prevCurrentScope;
 	}
 	public void onDisp(Disp me) {
 		Disp d = new Disp();
@@ -102,20 +104,18 @@ public class CopyMaker extends NodeMatcher {
 	}
 }
 class Fixer extends NodeMatcher {
-	Map<Node, Node> xrefs;
-	Fixer(Map<Node, Node> xrefs) { this.xrefs = xrefs; }
+	Map<Object, Object> xrefs;
+	Fixer(Map<Object, Object> xrefs) { this.xrefs = xrefs; }
 	void process(Node n) {
 		if (n != null) {
 			n.match(this);
 			n.scope = fix(n.scope);
+			n.name = fix(n.name);
 		}
 	}
 	@SuppressWarnings("unchecked")
-	<T extends Node> T fix(T src) {
-		if (src == null)
-			return null;
-		Node dst = xrefs.get(src);
-		return dst == null ? src : (T)dst;
+	<T extends Object> T fix(T src) {
+		return src == null ? null : (T)xrefs.getOrDefault(src, src);
 	}
 	public void onConst(Const me) {}
 	public void onCall(Call me) {

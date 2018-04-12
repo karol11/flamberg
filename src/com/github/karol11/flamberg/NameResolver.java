@@ -33,11 +33,11 @@ public class NameResolver extends NodeMatcher {
 		if (me.target == null)
 			me.error("unresolved name " + me.targetName);
 		if (me.target.scope != currentFn)
-			me.target.linkage = Node.LN_LOCAL_FIELD;
+			me.target.target.linkage = Node.LN_LOCAL_FIELD;
 	}
-	Node resolve(String name, FnDef scope) {
+	Name resolve(String name, FnDef scope) {
 		for (FnDef s = scope; s != null; s = s.parent) {
-			Node r = s.named.get(name);
+			Name r = s.named.get(name);
 			if (r != null) {
 				return r;
 			}
@@ -48,7 +48,7 @@ public class NameResolver extends NodeMatcher {
 			}
 			for (Param p: s.params) {
 				if (p.name != null && p.name.equals(name))
-					return p;
+					return p.name;
 			}
 		}
 		return null;
@@ -72,7 +72,7 @@ public class NameResolver extends NodeMatcher {
 					continue;
 				}
 			}
-			currentFnBody.add(makeContainer(makeRefTo(p), p.name, new Ref("pass")));
+			currentFnBody.add(makeContainer(makeRefTo(p.name), p.name, new Ref("pass")));
 		}
 		foldExpressions(me.body.iterator(), currentFnBody);
 		Node last = currentFnBody.get(currentFnBody.size()-1);
@@ -85,20 +85,21 @@ public class NameResolver extends NodeMatcher {
 		me.body = currentFnBody;
 		currentFn = me.parent;
 		if (me.name != null && me.overload == null) {
-			Node ovl = resolve(me.name, currentFn.parent);
-			if (ovl instanceof FnDef)
-				me.overload = (FnDef) ovl;
+			Name ovl = resolve(me.name.val, currentFn.parent);
+			if (ovl != null && ovl.target instanceof FnDef)
+				me.overload = (FnDef) ovl.target;
 		}
 	}
-	private Node makeRefTo(Node target) {
-		Ref r = new Ref(target.name);
+	private Node makeRefTo(Name target) {
+		Ref r = new Ref(target.val);
 		r.target = target;
-		return Parser.posFrom(target, r);
+		return Parser.posFrom(target.target, r);
 	}
-	private Node makeContainer(Node src, String name, Ref containerFnRef) {
+	private Node makeContainer(Node src, Name name, Ref containerFnRef) {
 		Call call = Parser.posFrom(src, new Call(Parser.posFrom(src, process(containerFnRef))));
 		if ((call.name = name) != null) {
-			currentFn.named.put(call.name, call);
+			call.name.target = call;
+			currentFn.named.put(call.name.val, name);
 			call.scope = currentFn;
 		}
 		call.params.add(src);
@@ -109,9 +110,9 @@ public class NameResolver extends NodeMatcher {
 			return false;
 		Ref ri = (Ref) initializer;
 		onRef(ri);
-		if (!(ri.target instanceof FnDef))
+		if (!(ri.target.target instanceof FnDef))
 			return false;
-		FnDef fi = (FnDef) ri.target;
+		FnDef fi = (FnDef) ri.target.target;
 		if (ri.targetName.equals("vref")) {
 			p.byVref = true;
 			return true;
@@ -120,7 +121,7 @@ public class NameResolver extends NodeMatcher {
 			return true;
 		}
 		if (fi.params.size() == 1 && fi.params.get(0).name.equals("_content_")) {
-			currentFnBody.add(makeContainer(makeRefTo(p), p.name, ri));
+			currentFnBody.add(makeContainer(makeRefTo(p.name), p.name, ri));
 			return true;
 		}
 		return false;
@@ -131,7 +132,7 @@ public class NameResolver extends NodeMatcher {
 			Node fn = c.params.get(0);
 			if (fn instanceof Ref) {
 				Ref r = (Ref) fn;
-				if (r.target == null || r.target instanceof FnDef)
+				if (r.target == null || r.target.target instanceof FnDef)
 					return c;
 			}
 		}
@@ -160,7 +161,8 @@ public class NameResolver extends NodeMatcher {
 							fs.params.add(Parser.posFrom(s, new Const(ast.get(name.substring(1)))));
 					}
 					if (first.name != null && fs.name == null) {
-						currentFn.named.put(fs.name = first.name, fs);
+						fs.name = first.name;
+						fs.name.target = fs;
 						first.name = null;
 					}
 					first = fs;
@@ -169,7 +171,7 @@ public class NameResolver extends NodeMatcher {
 					continue;
 				}
 				if (firstFn != null) {
-					FnDef func = (FnDef) ((Ref)firstFn.params.get(0)).target;
+					FnDef func = (FnDef) ((Ref)firstFn.params.get(0)).target.target;
 					if (firstFn.params.size() <= func.params.size() &&
 							name.equals(func.params.get(firstFn.params.size()-1).name)) {
 						if (!(s instanceof Call))
@@ -191,13 +193,13 @@ public class NameResolver extends NodeMatcher {
 	}
 	public void onDisp(Disp me) {
 		if (me.exportAll != null) {
-			for (Entry<String, Node> n: me.exportAll.named.entrySet()) {
+			for (Entry<String, Name> n: me.exportAll.named.entrySet()) {
 				String name = n.getKey();
 				Atom aName = ast.get(name);
 				if (name.startsWith("_") || me.variants.containsKey(aName))
 					continue;
 				FnDef fn = Parser.posFrom(me, new FnDef(me.exportAll));
-				fn.body.add(Parser.posFrom(n.getValue(), new Ref(name)));
+				fn.body.add(Parser.posFrom(n.getValue().target, new Ref(name)));
 				me.variants.put(aName, fn);
 			}
 		}

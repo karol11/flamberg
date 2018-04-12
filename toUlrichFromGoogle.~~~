@@ -5,24 +5,20 @@ Node = HashMap int -> Node
 CheckerIfPossiblyEncoded = : secrets
 	roots = Node
 	for secrets: s
-		n = var roots[s.length :Node]
-		for s.substr(1): c
-			offs = s.substr(0 i+1).find(c)
-			n := n[offs Node]
+		n = ref roots[s.length :Node]
+		for 0 ~ s.length: i
+			offs = s.substr(0 i+1).find(s[i])
+			n := n[offs :Node]
 
 	: text 	 ; time complexity = O(text.length)
 		seen = HashMap int -> int
-		n = var roots[text.length]
-		if text.length < 1:
-			^ n.isEmpty
-		seen.add text[0] -> 0
-		for 1 ~ text.length: i
-			if n.isEmpty:
+		n = ref roots[text.length]
+		for 0 ~ text.length: i
+			if !n:
 				^ false
-			c = text[i]
-			ofs = seen[c] || i
+			ofs = seen[text[i]] || i
 			n := n[ofs]
-			if ofs == i && !seen.put(c->i):
+			if ofs == i && !seen.add(text[i] -> i):
 				^ false
 		true
 

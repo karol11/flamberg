@@ -1,3 +1,5 @@
+package com.github.karol11.flamberg;
+
 import java.util.HashSet;
 import java.util.Set;
 

@@ -70,26 +70,15 @@ public class Parser {
 			fp = getPos();
 			if (!chainCall && n instanceof Ref && isAAndNotB('=', '=')) {
 				String name = ((Ref)n).targetName;
-				if (isEoln())
-					expectIndent("incomplete name declaration");
-				if (isImport(name))
+				if (!isEoln() && isImport(name))
 					continue;
 				Node named = parseCornerCall(null);
-				named.name = name;
-				if (named instanceof FnDef) {
-					for (FnDef f = currentScope; f != null; f = f.parent) {
-						Node oldNamed = f.named.get(name);
-						if (oldNamed instanceof FnDef){
-							((FnDef)named).overload = (FnDef) oldNamed;
-							break;
-						}
-					}
-				} else {
-					Node oldNamed = currentScope.named.get(name);
-					if (oldNamed != null)
-						error("Name " + name + " already defined. " + oldNamed.formatError("See"));
-				}
-				currentScope.named.put(name, named);
+				Name oldName = currentScope.named.get(name);
+				if (oldName != null && named instanceof FnDef && oldName.target instanceof FnDef)
+					((FnDef)named).overload = (FnDef) oldName.target;
+				else if (oldName != null)
+					error("Name " + name + " already defined. " + oldName.target.formatError("See") + "only functions can be overloaded");
+				named.name = new Name(name, currentScope, named);
 				toFill.add(named);
 			} else
 				toFill.add(parseCornerCall(n, chainCall));
@@ -363,13 +352,13 @@ public class Parser {
 			while (r.body.size() > 1) {
 				Node p = r.body.get(0);
 				if (p instanceof Ref)
-					r.params.add(posFrom(p, new Param(((Ref)p).targetName, null)));
+					r.params.add(posFrom(p, new Param(new Name(((Ref)p).targetName, r, null), null)));
 				else if (p instanceof Cast) {
 					Cast c = (Cast) p;
 					if (c.expression == null)
-						r.params.add(posFrom(p, new Param("", c.typer)));
+						r.params.add(posFrom(p, new Param(new Name("", r, null), c.typer)));
 					else if (c.expression instanceof Ref)
-						r.params.add(posFrom(p, new Param(((Ref)c.expression).targetName, c.typer)));
+						r.params.add(posFrom(p, new Param(new Name(((Ref)c.expression).targetName, r, null), c.typer)));
 					else
 						break;
 				} else

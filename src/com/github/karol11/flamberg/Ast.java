@@ -175,7 +175,7 @@ class FnRefType extends Type {
 	}
 	FnRefType(Ref ref) {
 		FnAndRefs fr = new FnAndRefs();
-		fr.fnToInstantiate = (FnDef)ref.target;
+		fr.fnToInstantiate = (FnDef)ref.target.target;
 		fr.refsToPatch.add(ref);
 		fns.add(fr);
 	}
@@ -210,9 +210,26 @@ class BuiltinType extends Type {
 	
 	BuiltinType(String name) {
 		this.name = name;
-		Ast.builtinTypeConstructors.put(this, new TypeConstructor(new FnDef(name)));
+		Ast.builtinTypeConstructors.put(this, new TypeConstructor(FnDef.mkGlobal(name)));
 	}
 	void match(TypeMatcher m) { m.onBuiltinType(this); }
+}
+
+class Name{
+	public Name(String val, FnDef scope, Node target) {
+		this.val = val;
+		this.scope = scope;
+		this.target = target;
+		if (scope != null)
+			scope.named.put(val, this);
+		if (target != null)
+			target.name = this;
+	}
+	String val;
+	FnDef scope;
+	Node target;
+	
+	public String toString() { return val; }
 }
 
 class Node {
@@ -222,9 +239,9 @@ class Node {
 	static int nodeNumerator = 1;
 
 	String file;
-	int linePos, line;
-	String name;
-	FnDef scope;
+	int linePos, line;// TODO: Pos class due template instantiation
+	Name name;
+	FnDef scope; // used in extension methods rebind
 	Type type;
 	int linkage = LN_LOCAL;
 	TypeConstructor typeConstructor;
@@ -329,8 +346,10 @@ class Param extends Node {
 	boolean folded;
 	boolean byVref;
 
-	public Param(String name, Node typeExpr) {
+	public Param(Name name, Node typeExpr) {
 		this.name = name;
+		if (name != null)
+			name.target = this;
 		this.typeExpr = typeExpr;
 		typeConstructor = new TypeConstructor();
 	}
@@ -338,11 +357,15 @@ class Param extends Node {
 }
 
 class Ref extends Node {
-	Node target;
+	Name target;
 	String targetName;
 
 	public Ref(String targetName) {
 		this.targetName = targetName;
+	}
+	public Ref(Name target) {
+		this.target = target;
+		this.targetName = target.val;
 	}
 
 	void match(NodeMatcher m) { m.onRef(this); }
@@ -357,7 +380,7 @@ class Callable extends Node {
 class FnDef extends Callable {
 	List<Param> params = new ArrayList<>();
 	List<Node> body = new ArrayList<>();
-	Map<String, Node> named = new HashMap<>();
+	Map<String, Name> named = new HashMap<>();
 	List<FnDef> imports = new ArrayList<>();
 	List<Ret> rets = new ArrayList<>(1);
 	FnDef parent;
@@ -376,8 +399,11 @@ class FnDef extends Callable {
 		this.body.add(body);
 	}
 	
-	FnDef(String name) { // for builtin type constructors only
-		this.name = name;
+	private FnDef(String name, FnDef scope) {
+		new Name(name, scope, this);		
+	}
+	static FnDef mkGlobal(String name) { // for builtin type constructors only
+		return new FnDef(name, Ast.globalSuperScope);
 	}
 
 	void match(NodeMatcher m) { m.onFnDef(this); }
@@ -436,6 +462,8 @@ public class Ast {
 	List<String> incompleteModules = new ArrayList<>();
 	List<FnDef> templateInstances = new ArrayList<>();
 	static final Map<Type, TypeConstructor> builtinTypeConstructors = new HashMap<>();
+	
+	static FnDef globalSuperScope = FnDef.mkGlobal("builtin-type-conctructors");
 	
 	static BuiltinType tInt = new BuiltinType("int");
 	static BuiltinType tUint = new BuiltinType("uint");

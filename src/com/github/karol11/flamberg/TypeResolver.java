@@ -77,9 +77,9 @@ public class TypeResolver extends NodeMatcher {
 	}
 	public void onRef(Ref me) {
 		me.type =
-			me.target instanceof FnDef ? new FnRefType(me) :
-			me.target.type == null ? new VarType() :
-			me.target.type;
+			me.target.target instanceof FnDef ? new FnRefType(me) :
+			me.target.target.type == null ? new VarType() :
+			me.target.target.type;
 	}
 	public void onFnDef(FnDef me) {
 		me.type = new FnRefType(me);
@@ -272,7 +272,7 @@ public class TypeResolver extends NodeMatcher {
 					int undoPos = undo.size();
 					FnDef fn = null;
 					for (FnDef scope = thisCall.scope; scope != null; scope = scope.parent) {
-						Node n = scope.named.get(a.name);
+						Node n = scope.named.get(a.name).target;
 						if (n instanceof FnDef) {
 							fn = (FnDef) n;
 							break;
@@ -283,7 +283,7 @@ public class TypeResolver extends NodeMatcher {
 							continue;
 						if (thisCall.superCall != null && fn.params.size() > 1) {
 							Ref ref = new Ref(a.name);
-							ref.target = fn;
+							ref.target = fn.name;
 							thisCall.superCall.params.set(0, ref);
 							thisCall.superCall.params.add(1, thisCall.params.get(0));
 							Type prevSupercallType = thisCall.superCall.type;
@@ -301,7 +301,7 @@ public class TypeResolver extends NodeMatcher {
 							Node prevAtom = thisCall.params.get(1);
 							thisCall.params.remove(1);
 							Ref ref = new Ref(a.name);
-							ref.target = fn;
+							ref.target = fn.name;
 							thisCall.params.add(0, ref);
 							Type prevType = thisCall.type;
 							thisCall.type = null;
@@ -337,7 +337,7 @@ public class TypeResolver extends NodeMatcher {
 				fns.override = null;
 				for (FnRefType.FnAndRefs fn: fns.fns) {
 					for (Ref ref: fn.refsToPatch)
-						ref.target = fn.fnToInstantiate;
+						ref.target = fn.fnToInstantiate.name;
 				}
 			}
 		});
@@ -377,7 +377,7 @@ public class TypeResolver extends NodeMatcher {
 					for (Node n: callee.body)
 						process(n);
 					for (Ref ref: fn.refsToPatch)
-						ref.target = callee;
+						ref.target = callee.name;
 					if (callee != overload) {
 						ast.templateInstances.add(callee);
 						if (overload.instances == null)
