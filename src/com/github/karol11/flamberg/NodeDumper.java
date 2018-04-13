@@ -91,7 +91,7 @@ public class NodeDumper extends NodeMatcher {
 		r.append(firstLineTerm);
 	}
 	public void onCall(Call me) {
-		r.append("()").append(firstLineTerm);
+		r.append(me.inlined ? "(-)" : "()").append(firstLineTerm);
 		for (Node n: me.params) 
 			process(n);
 	}

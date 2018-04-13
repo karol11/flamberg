@@ -12,6 +12,7 @@ public class Main {
 		new NameResolver().process(ast);
 		new TypeResolver().process(ast);
 		new Devirtualizer().process(ast);
+		new Inliner().process(ast);
 		System.out.print(ast.main.toString());
 	}
 }
