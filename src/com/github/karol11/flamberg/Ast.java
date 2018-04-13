@@ -16,15 +16,15 @@ class CompilerError extends RuntimeException {
 }
 
 class Numerator {
-	char[] r = {'a'};
+	char[] r = {'A'};
 	String next() {
 		for (int i = r.length; --i >= 0;) {
-			if (++r[i] <= 'z')
+			if (++r[i] <= 'Z')
 				return new String(r);
-			r[i] = 'a';
+			r[i] = 'A';
 		}
 		r = new char[r.length + 1];
-		Arrays.fill(r, 'a');
+		Arrays.fill(r, 'A');
 		return new String(r);
 	}
 }
@@ -206,10 +206,8 @@ class VarType extends Type {
 }
 
 class BuiltinType extends Type {
-	String name;
-	
 	BuiltinType(String name) {
-		this.name = name;
+		this.id = name;
 		Ast.builtinTypeConstructors.put(this, new TypeConstructor(FnDef.mkGlobal(name)));
 	}
 	void match(TypeMatcher m) { m.onBuiltinType(this); }
@@ -218,7 +216,6 @@ class BuiltinType extends Type {
 class Name{
 	public Name(String val, FnDef scope, Node target) {
 		this.val = val;
-		this.scope = scope;
 		this.target = target;
 		if (scope != null)
 			scope.named.put(val, this);
@@ -226,7 +223,6 @@ class Name{
 			target.name = this;
 	}
 	String val;
-	FnDef scope;
 	Node target;
 	
 	public String toString() { return val; }

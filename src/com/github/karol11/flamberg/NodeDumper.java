@@ -10,12 +10,12 @@ class TypeDumper extends TypeMatcher {
 	
 	public TypeDumper process(Type type) {
 		if (type == null) {
-			r.append("NULL");
+			r.append("null");
 			return this;
 		}
 		type = type.get();
 		r.append(type.id);
-		if (!processed.add(type))
+		if (!processed.add(type) && type instanceof BuiltinType)
 			return this;
 		r.append('=');
 		type.match(this);
@@ -45,7 +45,7 @@ class TypeDumper extends TypeMatcher {
 		r.append('}');		
 	}
 	void onVarType(VarType me) { r.append('?'); }
-	void onBuiltinType(BuiltinType me) { r.append(me.name); }
+	void onBuiltinType(BuiltinType me) { r.append(me.id); }
 	public String getString() {
 		String rs = r.toString();
 		r.setLength(0);

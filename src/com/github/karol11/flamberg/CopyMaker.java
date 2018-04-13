@@ -33,7 +33,7 @@ public class CopyMaker extends NodeMatcher {
 			xrefs.put(src, r);
 			Parser.posFrom(src, r);
 			if (r.name == null && src.name != null) {
-				xrefs.put(src.name, new Name(src.name.val, currentScope, src));
+				xrefs.put(src.name, new Name(src.name.val, null, r));
 			}
 			r.scope = currentScope;
 		}

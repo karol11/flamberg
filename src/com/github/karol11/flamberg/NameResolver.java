@@ -32,7 +32,7 @@ public class NameResolver extends NodeMatcher {
 		me.target = resolve(me.targetName, currentFn);
 		if (me.target == null)
 			me.error("unresolved name " + me.targetName);
-		if (me.target.scope != currentFn)
+		if (me.target.target.scope != currentFn)
 			me.target.target.linkage = Node.LN_LOCAL_FIELD;
 	}
 	Name resolve(String name, FnDef scope) {
@@ -72,7 +72,7 @@ public class NameResolver extends NodeMatcher {
 					continue;
 				}
 			}
-			currentFnBody.add(makeContainer(makeRefTo(p.name), p.name, new Ref("pass")));
+			currentFnBody.add(makeContainer(makeRefTo(p.name), p.name.val, new Ref("pass")));
 		}
 		foldExpressions(me.body.iterator(), currentFnBody);
 		Node last = currentFnBody.get(currentFnBody.size()-1);
@@ -91,17 +91,12 @@ public class NameResolver extends NodeMatcher {
 		}
 	}
 	private Node makeRefTo(Name target) {
-		Ref r = new Ref(target.val);
-		r.target = target;
-		return Parser.posFrom(target.target, r);
+		return Parser.posFrom(target.target, new Ref(target));
 	}
-	private Node makeContainer(Node src, Name name, Ref containerFnRef) {
+	private Node makeContainer(Node src, String name, Ref containerFnRef) {
 		Call call = Parser.posFrom(src, new Call(Parser.posFrom(src, process(containerFnRef))));
-		if ((call.name = name) != null) {
-			call.name.target = call;
-			currentFn.named.put(call.name.val, name);
-			call.scope = currentFn;
-		}
+		if (name != null)
+			new Name(name, currentFn, call);
 		call.params.add(src);
 		return call;
 	}
@@ -121,7 +116,7 @@ public class NameResolver extends NodeMatcher {
 			return true;
 		}
 		if (fi.params.size() == 1 && fi.params.get(0).name.equals("_content_")) {
-			currentFnBody.add(makeContainer(makeRefTo(p.name), p.name, ri));
+			currentFnBody.add(makeContainer(makeRefTo(p.name), p.name.val, ri));
 			return true;
 		}
 		return false;
