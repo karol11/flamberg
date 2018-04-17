@@ -175,7 +175,7 @@ class FnRefType extends Type {
 	}
 	FnRefType(Ref ref) {
 		FnAndRefs fr = new FnAndRefs();
-		fr.fnToInstantiate = (FnDef)ref.target.target;
+		fr.fnToInstantiate = (FnDef)ref.target.named;
 		fr.refsToPatch.add(ref);
 		fns.add(fr);
 	}
@@ -216,14 +216,16 @@ class BuiltinType extends Type {
 class Name{
 	public Name(String val, FnDef scope, Node target) {
 		this.val = val;
-		this.target = target;
+		this.named = target;
 		if (scope != null)
 			scope.named.put(val, this);
-		if (target != null)
+		if (target != null) {
 			target.name = this;
+			target.scope = scope;
+		}
 	}
 	String val;
-	Node target;
+	Node named;
 	
 	public String toString() { return val; }
 }
@@ -237,7 +239,7 @@ class Node {
 	String file;
 	int linePos, line;// TODO: Pos class due template instantiation
 	Name name;
-	FnDef scope; // used in extension methods rebind
+	FnDef scope;
 	Type type;
 	int linkage = LN_LOCAL;
 	TypeConstructor typeConstructor;
@@ -345,7 +347,7 @@ class Param extends Node {
 	public Param(Name name, Node typeExpr) {
 		this.name = name;
 		if (name != null)
-			name.target = this;
+			name.named = this;
 		this.typeExpr = typeExpr;
 		typeConstructor = new TypeConstructor();
 	}
@@ -354,14 +356,14 @@ class Param extends Node {
 
 class Ref extends Node {
 	Name target;
-	String targetName;
+	String targetStr;
 
-	public Ref(String targetName) {
-		this.targetName = targetName;
+	public Ref(String targetStr) {
+		this.targetStr = targetStr;
 	}
-	public Ref(Name target) {
-		this.target = target;
-		this.targetName = target.val;
+	public Ref(Name name) {
+		this.target = name;
+		this.targetStr = name.val;
 	}
 
 	void match(NodeMatcher m) { m.onRef(this); }
@@ -382,6 +384,8 @@ class FnDef extends Callable {
 	FnDef parent;
 	FnDef overload;
 	List<FnDef> instances;
+	int lexicalDepth = Integer.MAX_VALUE;
+	int retDepth = Integer.MAX_VALUE;
 
 	public FnDef() {
 		typeConstructor = new TypeConstructor(this);

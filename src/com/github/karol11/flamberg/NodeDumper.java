@@ -104,7 +104,7 @@ public class NodeDumper extends NodeMatcher {
 			process(me.typeExpr);
 	}
 	public void onRef(Ref me) {
-		r.append(me.targetName == null ? "unnamed" : me.targetName);
+		r.append(me.targetStr == null ? "unnamed" : me.targetStr);
 		if (me.target == null)
 			r.append('?');
 		r.append(firstLineTerm);

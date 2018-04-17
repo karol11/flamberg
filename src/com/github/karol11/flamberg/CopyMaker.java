@@ -15,8 +15,9 @@ public class CopyMaker extends NodeMatcher {
 	Name srcVarParam;
 	FnDef currentScope;
 
-	static Node copy(Node src, int actualParamsCount) {
+	static Node copy(FnDef src, int actualParamsCount) {
 		CopyMaker c = new CopyMaker(actualParamsCount);
+		c.currentScope = src.scope;
 		Node r = c.copy(src);
 		new Fixer(c.xrefs).process(r);
 		return r;
@@ -57,7 +58,7 @@ public class CopyMaker extends NodeMatcher {
 	public void onRef(Ref me) {
 		if (me.target == srcVarParam)
 			me.error("_params_ should be only in function call");
-		Ref ref = new Ref(me.targetName);
+		Ref ref = new Ref(me.targetStr);
 		ref.target = me.target;
 		r = ref;
 	}

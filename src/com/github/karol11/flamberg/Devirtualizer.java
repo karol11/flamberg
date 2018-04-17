@@ -33,7 +33,7 @@ public class Devirtualizer extends NodeMatcher {
 	public void onRef(Ref me) {
 		Node dst = me;
 		while (dst instanceof Ref)
-			dst = ((Ref)dst).target.target;
+			dst = ((Ref)dst).target.named;
 		me.typeConstructor = dst.typeConstructor;
 	}
 	public void onCast(Cast me) {

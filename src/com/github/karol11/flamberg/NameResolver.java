@@ -29,11 +29,11 @@ public class NameResolver extends NodeMatcher {
 	//  _() is hard immediate recursive,
 	//  same_named() call to overloaded,
 	//  _reapply() make overload resolution at the point of original call
-		me.target = resolve(me.targetName, currentFn);
+		me.target = resolve(me.targetStr, currentFn);
 		if (me.target == null)
-			me.error("unresolved name " + me.targetName);
-		if (me.target.target.scope != currentFn)
-			me.target.target.linkage = Node.LN_LOCAL_FIELD;
+			me.error("unresolved name " + me.targetStr);
+		if (me.target.named.scope != currentFn)
+			me.target.named.linkage = Node.LN_LOCAL_FIELD;
 	}
 	Name resolve(String name, FnDef scope) {
 		for (FnDef s = scope; s != null; s = s.parent) {
@@ -86,12 +86,12 @@ public class NameResolver extends NodeMatcher {
 		currentFn = me.parent;
 		if (me.name != null && me.overload == null) {
 			Name ovl = resolve(me.name.val, currentFn.parent);
-			if (ovl != null && ovl.target instanceof FnDef)
-				me.overload = (FnDef) ovl.target;
+			if (ovl != null && ovl.named instanceof FnDef)
+				me.overload = (FnDef) ovl.named;
 		}
 	}
 	private Node makeRefTo(Name target) {
-		return Parser.posFrom(target.target, new Ref(target));
+		return Parser.posFrom(target.named, new Ref(target));
 	}
 	private Node makeContainer(Node src, String name, Ref containerFnRef) {
 		Call call = Parser.posFrom(src, new Call(Parser.posFrom(src, process(containerFnRef))));
@@ -105,14 +105,14 @@ public class NameResolver extends NodeMatcher {
 			return false;
 		Ref ri = (Ref) initializer;
 		onRef(ri);
-		if (!(ri.target.target instanceof FnDef))
+		if (!(ri.target.named instanceof FnDef))
 			return false;
-		FnDef fi = (FnDef) ri.target.target;
-		if (ri.targetName.equals("vref")) {
+		FnDef fi = (FnDef) ri.target.named;
+		if (ri.targetStr.equals("vref")) {
 			p.byVref = true;
 			return true;
 		}
-		if (ri.targetName.equals("ref")) {
+		if (ri.targetStr.equals("ref")) {
 			return true;
 		}
 		if (fi.params.size() == 1 && fi.params.get(0).name.equals("_content_")) {
@@ -127,7 +127,7 @@ public class NameResolver extends NodeMatcher {
 			Node fn = c.params.get(0);
 			if (fn instanceof Ref) {
 				Ref r = (Ref) fn;
-				if (r.target == null || r.target.target instanceof FnDef)
+				if (r.target == null || r.target.named instanceof FnDef)
 					return c;
 			}
 		}
@@ -141,7 +141,7 @@ public class NameResolver extends NodeMatcher {
 			Node s = body.next();
 			Call fs = getStaticCall(s);
 			if (fs != null) {
-				String name = ((Ref)fs.params.get(0)).targetName;
+				String name = ((Ref)fs.params.get(0)).targetStr;
 				if (name.startsWith(".")) {
 					if (first == null)
 						s.error(".. has no expression above");
@@ -157,7 +157,7 @@ public class NameResolver extends NodeMatcher {
 					}
 					if (first.name != null && fs.name == null) {
 						fs.name = first.name;
-						fs.name.target = fs;
+						fs.name.named = fs;
 						first.name = null;
 					}
 					first = fs;
@@ -166,7 +166,7 @@ public class NameResolver extends NodeMatcher {
 					continue;
 				}
 				if (firstFn != null) {
-					FnDef func = (FnDef) ((Ref)firstFn.params.get(0)).target.target;
+					FnDef func = (FnDef) ((Ref)firstFn.params.get(0)).target.named;
 					if (firstFn.params.size() <= func.params.size() &&
 							name.equals(func.params.get(firstFn.params.size()-1).name)) {
 						if (!(s instanceof Call))
@@ -194,7 +194,7 @@ public class NameResolver extends NodeMatcher {
 				if (name.startsWith("_") || me.variants.containsKey(aName))
 					continue;
 				FnDef fn = Parser.posFrom(me, new FnDef(me.exportAll));
-				fn.body.add(Parser.posFrom(n.getValue().target, new Ref(name)));
+				fn.body.add(Parser.posFrom(n.getValue().named, new Ref(name)));
 				me.variants.put(aName, fn);
 			}
 		}

@@ -69,15 +69,15 @@ public class Parser {
 			}
 			fp = getPos();
 			if (!chainCall && n instanceof Ref && isAAndNotB('=', '=')) {
-				String name = ((Ref)n).targetName;
+				String name = ((Ref)n).targetStr;
 				if (!isEoln() && isImport(name))
 					continue;
 				Node named = parseCornerCall(null);
 				Name oldName = currentScope.named.get(name);
-				if (oldName != null && named instanceof FnDef && oldName.target instanceof FnDef)
-					((FnDef)named).overload = (FnDef) oldName.target;
+				if (oldName != null && named instanceof FnDef && oldName.named instanceof FnDef)
+					((FnDef)named).overload = (FnDef) oldName.named;
 				else if (oldName != null)
-					error("Name " + name + " already defined. " + oldName.target.formatError("See") + "only functions can be overloaded");
+					error("Name " + name + " already defined. " + oldName.named.formatError("See") + "only functions can be overloaded");
 				named.name = new Name(name, currentScope, named);
 				toFill.add(named);
 			} else
@@ -251,13 +251,13 @@ public class Parser {
 				if (isAlpha(peek(0))) {
 					if (r instanceof Ref) {
 						Ref rr = (Ref) r;
-						FnDef namespace = namedImports.get(rr.targetName);
+						FnDef namespace = namedImports.get(rr.targetStr);
 						if (namespace != null) {
 							String importedName = getId();
 							rr.target = namespace.named.get(importedName);
 							if (rr.target == null)
-								error("module " + rr.targetName + " does not contain name " + importedName);
-							rr.targetName = importedName;
+								error("module " + rr.targetStr + " does not contain name " + importedName);
+							rr.targetStr = importedName;
 							continue;
 						}
 					}
@@ -352,13 +352,13 @@ public class Parser {
 			while (r.body.size() > 1) {
 				Node p = r.body.get(0);
 				if (p instanceof Ref)
-					r.params.add(posFrom(p, new Param(new Name(((Ref)p).targetName, r, null), null)));
+					r.params.add(posFrom(p, new Param(new Name(((Ref)p).targetStr, r, null), null)));
 				else if (p instanceof Cast) {
 					Cast c = (Cast) p;
 					if (c.expression == null)
 						r.params.add(posFrom(p, new Param(new Name("", r, null), c.typer)));
 					else if (c.expression instanceof Ref)
-						r.params.add(posFrom(p, new Param(new Name(((Ref)c.expression).targetName, r, null), c.typer)));
+						r.params.add(posFrom(p, new Param(new Name(((Ref)c.expression).targetStr, r, null), c.typer)));
 					else
 						break;
 				} else

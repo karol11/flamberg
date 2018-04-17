@@ -77,9 +77,9 @@ public class TypeResolver extends NodeMatcher {
 	}
 	public void onRef(Ref me) {
 		me.type =
-			me.target.target instanceof FnDef ? new FnRefType(me) :
-			me.target.target.type == null ? new VarType() :
-			me.target.target.type;
+			me.target.named instanceof FnDef ? new FnRefType(me) :
+			me.target.named.type == null ? new VarType() :
+			me.target.named.type;
 	}
 	public void onFnDef(FnDef me) {
 		me.type = new FnRefType(me);
@@ -272,7 +272,7 @@ public class TypeResolver extends NodeMatcher {
 					int undoPos = undo.size();
 					FnDef fn = null;
 					for (FnDef scope = thisCall.scope; scope != null; scope = scope.parent) {
-						Node n = scope.named.get(a.name).target;
+						Node n = scope.named.get(a.name).named;
 						if (n instanceof FnDef) {
 							fn = (FnDef) n;
 							break;

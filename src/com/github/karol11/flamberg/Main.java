@@ -13,6 +13,7 @@ public class Main {
 		new TypeResolver().process(ast);
 		new Devirtualizer().process(ast);
 		new Inliner().process(ast);
+		new EscapePass().process(ast);
 		System.out.print(ast.main.toString());
 	}
 }
