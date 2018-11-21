@@ -31,11 +31,11 @@ echo square(3.14)
 Person = : name age ##
 for []
   Person "Andrey" 45
-  Person "Katya" 45-7
+  Person "Katya"  45-7
   Person "Polina" 14
-  Person "Tony" 7
+  Person "Tony"    7
 do: i
-  echo "{i.name} of {mkPlural(i.age, 'year')}"
+  echo "{i.name} of {i.age}"
 ```
 
 ### Low level
@@ -61,9 +61,9 @@ mySql.connect dbName user password
 ..query "
      select name, id
      from users
-     limit 100, {request.page}
+     limit 100, {page}
 ..map: u "
-     <li id="u_{u.id}">
+     <li id="{u.id}">
          {u.name}
      </li>
 ..echo
