@@ -3,7 +3,7 @@ A high/low level lightweight programming language.
 
 ## Features
 - Compiled to machine code. If needed - low level, otherwise - managed
-- No GC! Litetime management built atop of master-shared-weak references.
+- No GC! [Litetime management built atop of master-shared-weak references](https://github.com/karol11/ltm).
 - Modular.
 - Object-oriented, imperative, functional.
 - Strong typing with global type inference.
