@@ -47,12 +47,12 @@ ptr(0x12345).byte ^= 0x80
 
 ### Fizz-Buzz
 ```Python
-(1..101).each: i
-  if i%3:
-     if i%5 :i.toString :"buzz"
-  else:
-     if i%5 :"fizz"     :"fizzbuzz"
-.echo
+for 1..101: i
+  echo
+    if i%3:
+       if i%5 :i.toString :"buzz"
+    else:
+       if i%5 :"fizz"     :"fizzbuzz"
 ```
 
 ### In PHP boots
@@ -84,7 +84,7 @@ Rectangle = : x y w h color #
 Group = x y items #
    paint: canvas
        canvas.translate x y
-       items.each: i
+       for items: i
            i.paint canvas
        canvas.translate -x -y
 
