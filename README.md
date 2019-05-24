@@ -8,7 +8,7 @@ A high/low level lightweight programming language.
 - Object-oriented, imperative, functional.
 - Strong typing with global type inference.
 - Lightweight indentation-based syntax.
-- Simple. Eight syntax elements: constant, function, dispatcher, call, termination, import, name, type.
+- Simple. Seven syntax elements: constant, function, dispatcher, call, import, name, type.
 
 ## Samples
 
@@ -29,13 +29,13 @@ echo square(3.14)
 ### Data structures
 ```Python
 Person = : name age ##
-for []
+[]
   Person "Andrey" 45
   Person "Katya"  45-7
   Person "Polina" 14
   Person "Tony"    7
-do: i
-  echo "{i.name} of {i.age}"
+.each: i "{i.name} of {i.age}"
+.echo
 ```
 
 ### Low level
@@ -47,26 +47,26 @@ ptr(0x12345).byte ^= 0x80
 
 ### Fizz-Buzz
 ```Python
-for 1~101: i
-   echo
-      if i%3:
-         if i%5 :i.toString :"buzz"
-      else:
-         if i%5 :"fizz"     :"fizzbuzz"
+(1..101).each: i
+  if i%3:
+     if i%5 :i.toString :"buzz"
+  else:
+     if i%5 :"fizz"     :"fizzbuzz"
+.echo
 ```
 
 ### In PHP boots
 ```Python
 mySql.connect dbName user password
-..query "
+.query "
      select name, id
      from users
      limit 100, {page}
-..map: u "
+.map: u "
      <li id="{u.id}">
          {u.name}
      </li>
-..echo
+.echo
 ```
 
 ### Classes and objects
@@ -84,7 +84,7 @@ Rectangle = : x y w h color #
 Group = x y items #
    paint: canvas
        canvas.translate x y
-       for items: i
+       items.each: i
            i.paint canvas
        canvas.translate -x -y
 
